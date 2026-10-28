@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống báo cáo thống kê doanh số</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .tab-active { border-bottom: 3px solid #ea580c; color: #ea580c; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-[#0b2447] text-white px-6 py-3 flex flex-wrap justify-between items-center shadow-md">
+    <div class="flex items-center gap-3">
+      <div class="bg-orange-600 text-white font-black px-3 py-1.5 rounded-lg text-lg tracking-wider">IBB</div>
+      <div>
+        <p class="text-xs text-slate-300 uppercase tracking-wider font-medium" id="headerDept">FPT TELECOM - PHÒNG KINH DOANH MỚI</p>
+        <h1 class="text-lg font-bold">Hệ thống báo cáo thống kê doanh số</h1>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 mt-2 sm:mt-0 text-sm">
+      <select id="monthFilter" class="bg-[#19376d] border border-blue-900 rounded px-2 py-1 text-xs text-white outline-none">
+        <option>Tháng 10/2026</option>
+        <option>Tháng 11/2026</option>
+      </select>
+      <span class="bg-[#19376d] px-2.5 py-1 rounded text-xs text-slate-200">Dữ liệu đến hôm nay</span>
+      <button onclick="toggleRole()" id="roleBtn" class="bg-orange-600 hover:bg-orange-700 px-3 py-1 rounded text-xs font-semibold">
+        Quyền: Admin (Bấm đổi)
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="bg-white border-b border-slate-200 px-6 flex gap-6 text-sm font-medium overflow-x-auto">
+    <button onclick="switchTab('report')" id="tab-report" class="py-3 px-2 tab-active">Báo cáo doanh số</button>
+    <button onclick="switchTab('ranking')" id="tab-ranking" class="py-3 px-2 text-slate-600 hover:text-orange-600">Xếp hạng nhân viên</button>
+    <button onclick="switchTab('import')" id="tab-import" class="py-3 px-2 text-slate-600 hover:text-orange-600">Nhập dữ liệu</button>
+  </nav>
+
+  <!-- Container Nội dung -->
+  <main class="max-w-7xl mx-auto p-6">
+    
+    <!-- Tab 1: Báo cáo tổng -->
+    <section id="content-report" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-500 font-semibold uppercase">Tổng Hợp Đồng Thực Hiện</p>
+          <h3 class="text-3xl font-extrabold text-blue-900 mt-1" id="statTotalHD">--</h3>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-500 font-semibold uppercase">Tỷ Lệ Đạt Mục Tiêu</p>
+          <h3 class="text-3xl font-extrabold text-orange-600 mt-1" id="statRate">--%</h3>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-500 font-semibold uppercase">Nhân Sự Tham Gia</p>
+          <h3 class="text-3xl font-extrabold text-emerald-600 mt-1" id="statStaff">--</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 2: Xếp hạng -->
+    <section id="content-ranking" class="hidden">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-800 mb-4">Bảng Xếp Hạng Thi Đua</h3>
+        <div id="rankingList" class="space-y-3">Đang cập nhật...</div>
+      </div>
+    </section>
+
+    <!-- Tab 3: Nhập dữ liệu (Admin) -->
+    <section id="content-import" class="hidden space-y-4">
+      <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-lg text-sm flex items-center gap-2">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Chế độ Admin: Cho phép chỉnh sửa danh sách nhân sự, chỉ tiêu và upload file đối soát doanh số.</span>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-slate-800 text-base">Danh sách nhân sự phòng</h3>
+          <button onclick="addRow()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-md font-semibold">
+            + Thêm nhân sự
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr class="border-b bg-slate-50 text-slate-600 text-xs uppercase">
+                <th class="p-3">Họ và tên</th>
+                <th class="p-3">Mã NV (Acc)</th>
+                <th class="p-3">Thâm niên</th>
+                <th class="p-3">Chỉ tiêu tháng</th>
+                <th class="p-3 text-center">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="staffTableBody" class="divide-y divide-slate-100">
+              <!-- Sẽ load từ Google Sheet hoặc danh sách mặc định -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // CẤU HÌNH WEB APP URL CỦA GOOGLE SHEET Ở ĐÂY (NẾU CÓ)
+    const GOOGLE_SHEET_API = ""; 
+
+    // Dữ liệu mẫu ban đầu
+    let staffData = [
+      { name: "Hieunt310", code: "hieunt310", exp: "13 - 24T", target: 50 },
+      { name: "Quoclv", code: "quoclv", exp: ">24T", target: 50 },
+      { name: "ThuTU", code: "thutu", exp: "1 - 6T", target: 20 },
+      { name: "Luannt68", code: "luannt68", exp: ">24T", target: 35 }
+    ];
+
+    let isAdmin = true;
+
+    function renderStaff() {
+      const tbody = document.getElementById('staffTableBody');
+      tbody.innerHTML = '';
+      staffData.forEach((s, idx) => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-3"><input type="text" class="border rounded px-2 py-1 w-full text-sm" value="${s.name}"></td>
+            <td class="p-3"><input type="text" class="border rounded px-2 py-1 w-full text-sm" value="${s.code}"></td>
+            <td class="p-3">
+              <select class="border rounded px-2 py-1 text-sm">
+                <option ${s.exp === '1 - 6T' ? 'selected' : ''}>1 - 6T</option>
+                <option ${s.exp === '7 - 12T' ? 'selected' : ''}>7 - 12T</option>
+                <option ${s.exp === '13 - 24T' ? 'selected' : ''}>13 - 24T</option>
+                <option ${s.exp === '>24T' ? 'selected' : ''}>>24T</option>
+              </select>
+            </td>
+            <td class="p-3"><input type="number" class="border rounded px-2 py-1 w-24 text-sm font-semibold text-blue-900" value="${s.target}"></td>
+            <td class="p-3 text-center">
+              <button onclick="removeRow(${idx})" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">Xóa</button>
+            </td>
+          </tr>
+        `;
+      });
+      document.getElementById('statStaff').innerText = staffData.length;
+      document.getElementById('statTotalHD').innerText = staffData.reduce((a, b) => a + Number(b.target), 0);
+      document.getElementById('statRate').innerText = "84.5%";
+    }
+
+    function addRow() {
+      staffData.push({ name: "NV Mới", code: "account", exp: "1 - 6T", target: 20 });
+      renderStaff();
+    }
+
+    function removeRow(idx) {
+      staffData.splice(idx, 1);
+      renderStaff();
+    }
+
+    function switchTab(tabName) {
+      ['report', 'ranking', 'import'].forEach(t => {
+        document.getElementById('content-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).classList.remove('tab-active');
+        document.getElementById('tab-' + t).classList.add('text-slate-600');
+      });
+      document.getElementById('content-' + tabName).classList.remove('hidden');
+      document.getElementById('tab-' + tabName).classList.add('tab-active');
+      document.getElementById('tab-' + tabName).classList.remove('text-slate-600');
+    }
+
+    function toggleRole() {
+      isAdmin = !isAdmin;
+      document.getElementById('roleBtn').innerText = isAdmin ? 'Quyền: Admin (Bấm đổi)' : 'Quyền: Nhân viên (Bấm đổi)';
+    }
+
+    // Khởi chạy ban đầu
+    renderStaff();
+  </script>
+</body>
+</html>
